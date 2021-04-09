@@ -105,7 +105,8 @@ check_breadth_req(TR, MT):-
     ;   Total2 > 5
     ->  MT = MT7
     ;   MT = TR 
-    ).
+    ),
+    writeln("Breadth Requirement is Satisfied.").
     
 
 check_breadth_LFSC(TR, MT, N) :-
