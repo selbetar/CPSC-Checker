@@ -90,20 +90,17 @@ check_arts_req(Transcript, ModifiedTranscript).
 
 % check_breadth_req(["MATH 100","CHEM 101","PHYS 101","BIOL 100","STAT 100","CPSC 100","ASTR 100"], MT).
 check_breadth_req(TR, MT):-
-    check_breadth_general(TR, MT1, "MATH", N1),
-    check_breadth_general(MT1, MT2, "CHEM", N2),
-    check_breadth_general(MT2, MT3, "PHYS", N3),
-    check_breadth_LFSC(MT3, MT4, N4),
-    check_breadth_STAT(MT4, MT5, N5),
-    check_breadth_general(MT5, MT6, "CPSC", N6),
-    check_breadth_EPSC(MT6, MT7, N7),
-    Total1 is N1+N2+N3+N4+N5+N6,
-    Total2 is N1+N2+N3+N4+N5+N6+N7,
-    Total2 > 5,
-    (   Total1 > 5
-    ->  MT = MT6
-    ;   Total2 > 5
-    ->  MT = MT7
+    check_breadth_general(TR, MT1, "CHEM", N1),
+    check_breadth_general(MT1, MT2, "PHYS", N2),
+    check_breadth_LFSC(MT2, MT3, N3),
+    check_breadth_EPSC(MT3, MT4, N4),
+    Total1 is N1+N2+N3,
+    Total2 is N1+N2+N3+N4,
+    Total2 > 2,
+    (   Total1 > 3
+    ->  MT = MT3
+    ;   Total2 > 3
+    ->  MT = MT4
     ;   MT = TR 
     ),
     writeln("Breadth Requirement is Satisfied.").
