@@ -88,7 +88,7 @@ check_core_req(Transcript, ModifiedTranscript).
 % TODO
 check_arts_req(Transcript, ModifiedTranscript).
 
-% check_breadth_req(["MATH 100","CHEM 101","PHYS 101","BIOL 100","STAT 100","CPSC 100","ASTR 100"], MT).
+% check_breadth_req(["MATH 100","CHEM 121","PHYS 101","BIOL 121","STAT 200","ASTR 101"], MT).
 check_breadth_req(TR, MT):-
     check_breadth_general(TR, MT1, "CHEM", N1),
     check_breadth_general(MT1, MT2, "PHYS", N2),
@@ -166,14 +166,14 @@ breadth_helper([H|T],L,Category) :-
     invalid_breadth_courses(H),
     breadth_helper(T, L, Category).
 breadth_helper([H|T],L,Category) :-
-    split_string(H, " ", "" , Tokens),
-    nth0(0, Tokens, SubjectCode),
-    dif(SubjectCode, Category),
+    get_course_info(H, SC, _),
+    dif(SC, Category),
     breadth_helper(T, L, Category).
 breadth_helper([H|T],[H|L],Category) :-
     \+invalid_breadth_courses(H),
-    split_string(H, " ", "" , Tokens),
-    nth0(0, Tokens, Category),
+    get_course_info(H, Category, SN),
+    credit(Category, SN, Credit),
+    Credit > 2,
     breadth_helper(T, L, Category).
 
 invalid_breadth_courses("MATH 302").
@@ -186,6 +186,32 @@ invalid_breadth_courses("EOSC 111").
 invalid_breadth_courses("GEOB 207").
 
 
-% TODO
-% electives requirement
-check_elect_req(Transcript).
+% check_upper_level_req(["BIOL 323", "BIOL 324", "BIOL 325", "ECON 301", "ECON 302", "ECON 303", "ECON 304", "ECON 305", 
+% "ECON 306", "BIOL 325", "CPSC 310", "CPSC 313", "CPSC 320", "CPSC 312", "CPSC 311", "CPSC 314"]).
+% should be just enough upper level science and non-science credits
+check_upper_level_req(Transcript) :-
+    upper_level_helper(Transcript, UpperLevelCreditList, UpperLevelScienceCreditList),
+    credit_sum(UpperLevelCreditList, Sum1),
+    credit_sum(UpperLevelScienceCreditList, Sum2),
+    Sum1 > 47,
+    Sum2 > 29,
+    writeln("Upper-Level Requirement is Satisfied.").
+
+
+upper_level_helper([], [], []).
+upper_level_helper([H|T], [Credit|T2], UpperLevelScienceCreditList) :-
+    get_course_info(H, SC, SN),
+    atom_number(SN, Num),
+    Num > 299,
+    atom_string(SCA, SC),    
+    \+faculty(SCA, 'Faculty of Science'),
+    credit(SC, SN, Credit),
+    upper_level_helper(T, T2, UpperLevelScienceCreditList).
+upper_level_helper([H|T], [Credit|T2], [Credit|T3]) :-
+    get_course_info(H, SC, SN),
+    atom_number(SN, Num),
+    Num > 299,
+    atom_string(SCA, SC),    
+    faculty(SCA, 'Faculty of Science'),
+    credit(SC, SN, Credit),
+    upper_level_helper(T, T2, T3).
