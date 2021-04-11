@@ -97,9 +97,9 @@ check_breadth_req(TR, MT):-
     Total1 is N1+N2+N3,
     Total2 is N1+N2+N3+N4,
     Total2 > 2,
-    (   Total1 > 3
+    (   Total1 > 2
     ->  MT = MT3
-    ;   Total2 > 3
+    ;   Total2 > 2
     ->  MT = MT4
     ;   MT = TR 
     ),
