@@ -8,11 +8,11 @@
 check_degree(FilePath) :- 
     get_transcript(FilePath, Transcript),
     check_credit_count(Transcript),
+    check_upper_level_req(Transcript),
     check_comm_req(Transcript, MT1), % MT = ModifiedTranscript
     check_core_req(MT1, MT2),
     check_arts_req(MT2, MT3),
-    check_breadth_req(MT3, MT4),
-    check_elect_req(MT5).
+    check_breadth_req(MT3, MT4).
     
 
 get_transcript(File, Transcript) :-
