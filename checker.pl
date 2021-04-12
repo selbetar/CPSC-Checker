@@ -76,17 +76,224 @@ communication_course("ENGL 120").
 communication_course("ENGL 121").
 communication_course("SCIE 300").
 
+/*
+check_core_req(["CPSC 110", "CPSC 121", "MATH 100", "MATH 101", "CHEM 121", "PHYS 101", "BIOL 121", "CPSC 210",
+"CPSC 213", "CPSC 221", "MATH 200", "MATH 221", "STAT 241", "CPSC 310", "CPSC 313", "CPSC 320", "CPSC 304",
+"CPSC 312", "CPSC 340", "CPSC 404", "CPSC 410", "CPSC 416"], MT).
+*/
+check_core_req(Transcript, ModifiedTranscript) :-
+    check_first_year_core_req(Transcript, MT1),
+    check_second_year_core_req(MT1, MT2),
+    check_upper_year_core_req(MT2, ModifiedTranscript).
 
 
+% check_first_year_core_req(["CPSC 110", "CPSC 121", "MATH 100", "MATH 101", "CHEM 121", "PHYS 101", "BIOL 121"], MT).
+check_first_year_core_req(Transcript, ModifiedTranscript) :-
+    check_first_year_cpsc_req(Transcript, MT1),
+    check_first_year_math_req(MT1, MT2),
+    check_phys_science_req(MT2, MT3),
+    check_biol_req(MT3, ModifiedTranscript),
+    writeln("First Year Core Requirement is Satisfied.").
 
 
+% check_first_year_cpsc_req(["CPSC 110", "CPSC 121", "CPSC 210"], MT).
+check_first_year_cpsc_req(Transcript, ModifiedTranscript) :-
+    findall(X, (member(X, Transcript), first_year_cpsc(X)), L1),
+    length(L1, Length),
+    Length > 1,
+    remove_courses(Transcript, L1, ModifiedTranscript, 2).
+
+first_year_cpsc("CPSC 110").
+first_year_cpsc("CPSC 121").
 
 
-% TODO
-check_core_req(Transcript, ModifiedTranscript).
+% check_first_year_math_req(["MATH 102", "MATH 103", "MATH 200"], MT).
+check_first_year_math_req(Transcript, ModifiedTranscript) :-
+    findall(X, (member(X, Transcript), first_year_math1(X)), L1),
+    findall(Y, (member(Y, Transcript), first_year_math2(Y)), L2),
+    length(L1, Length1),
+    length(L2, Length2),
+    Length1 > 0,
+    Length2 > 0,
+    first_year_math_helper(L1, L2, MathCourses),
+    remove_courses(Transcript, MathCourses, ModifiedTranscript, 2).
 
-% TODO
-check_arts_req(Transcript, ModifiedTranscript).
+% returns a list containing one item from the first list and one item from the second list
+first_year_math_helper([],[],_).
+first_year_math_helper([H1|T1], [H2|T2], L) :-
+    L = [H1,H2].
+
+first_year_math1("MATH 100").
+first_year_math1("MATH 102").
+first_year_math1("MATH 104").
+first_year_math1("MATH 110").
+first_year_math1("MATH 111").
+first_year_math1("MATH 120").
+first_year_math1("MATH 140").
+first_year_math1("MATH 180").
+first_year_math1("MATH 184").
+
+first_year_math2("MATH 101").
+first_year_math2("MATH 103").
+first_year_math2("MATH 105").
+first_year_math2("MATH 121").
+
+
+% check_phys_science_req(["MATH 100", "PHYS 101", "CPSC 110", "CHEM 121"], MT).
+check_phys_science_req(Transcript, ModifiedTranscript) :-
+    get_phys_science_courses(Transcript, PhysSciCourses),
+    length(PhysSciCourses, Length),
+    Length > 1,
+    remove_courses(Transcript, PhysSciCourses, ModifiedTranscript, 2).
+
+% Gets physical science (CHEM or PHYS) courses from transcript
+% get_phys_science_courses(["MATH 100", "PHYS 101", "CPSC 110", "CHEM 121"], L).
+get_phys_science_courses(Transcript, L) :-
+    findall(X, (member(X,Transcript), phys_science_course(X)), L).
+
+% returns true for eligible first year physical science courses (CHEM 100 and PHYS 100 are invalid)
+phys_science_course(Course) :-
+    get_course_info(Course, SC, SN),
+    SC = "CHEM",
+    atom_number(SN, Num),
+    Num > 100,
+    Num < 200.
+phys_science_course(Course) :-
+    get_course_info(Course, SC, SN),
+    SC = "PHYS",
+    atom_number(SN, Num),
+    Num > 100,
+    Num < 200.
+
+
+% check_biol_req(["MATH 100", "BIOL 121", "CPSC 110"], MT).
+check_biol_req(Transcript, ModifiedTranscript) :-
+    get_biol_courses(Transcript, BiolCourses),
+    length(BiolCourses, Length),
+    Length > 0,
+    remove_courses(Transcript, BiolCourses, ModifiedTranscript, 1).
+
+% Gets biology requirement courses from transcript
+% get_biol_courses(["MATH 100", "BIOL 121", "CPSC 110"], L).
+get_biol_courses(Transcript, L) :-
+    findall(X, (member(X, Transcript), biol_course(X)), L).
+
+% returns true for eligible biology courses (ASTR, ATSC, BIOL, EOSC, GEOB)
+biol_course(Course) :-
+    get_course_info(Course, SC, SN),
+    member(SC, ["ASTR", "ATSC", "BIOL", "EOSC", "GEOB"]).
+
+
+% check_second_year_core_req(["CPSC 210", "CPSC 213", "CPSC 221", "MATH 200", "MATH 221", "STAT 241"], MT).
+check_second_year_core_req(Transcript, ModifiedTranscript) :-
+    check_second_year_cpsc_req(Transcript, MT1),
+    check_second_year_math_req(MT1, MT2),
+    check_second_year_stat_req(MT2, ModifiedTranscript),
+    writeln("Second Year Core Requirement is Satisfied.").
+
+
+% check_second_year_cpsc_req(["CPSC 210", "CPSC 213", "CPSC 221", "CPSC 310"], MT).
+check_second_year_cpsc_req(Transcript, ModifiedTranscript) :-
+    findall(X, (member(X, Transcript), second_year_cpsc(X)), CpscCourses),
+    length(CpscCourses, Length),
+    Length > 2,
+    remove_courses(Transcript, CpscCourses, ModifiedTranscript, 3).
+
+second_year_cpsc("CPSC 210").
+second_year_cpsc("CPSC 213").
+second_year_cpsc("CPSC 221").
+
+
+% check_second_year_math_req(["MATH 200", "MATH 221"], MT).
+check_second_year_math_req(Transcript, ModifiedTranscript) :-
+    findall(X, (member(X, Transcript), second_year_math(X)), MathCourses),
+    length(MathCourses, Length),
+    Length > 1,
+    remove_courses(Transcript, MathCourses, ModifiedTranscript, 2).
+
+second_year_math("MATH 200").
+second_year_math("MATH 221").
+
+
+% check_second_year_stat_req(["STAT 200", "MATH 302"], MT).
+% check_second_year_stat_req(["STAT 251"], MT).
+check_second_year_stat_req(Transcript, ModifiedTranscript) :-
+    findall(X, (member(X, Transcript), member(X, ["STAT 200"])), L1),
+    findall(X, (member(X, Transcript), member(X, ["STAT 302", "MATH 302"])), L2),
+    length(L1, Length1),
+    length(L2, Length2),
+    Length1 > 0,
+    Length2 > 0,
+    append(L1, L2, StatCourses),
+    remove_courses(Transcript, StatCourses, ModifiedTranscript, 2).
+check_second_year_stat_req(Transcript, ModifiedTranscript) :-
+    findall(X, (member(X, Transcript), member(X, ["STAT 241", "STAT 251"])), StatCourses),
+    length(StatCourses, Length),
+    Length > 0,
+    remove_courses(Transcript, StatCourses, ModifiedTranscript, 1).
+
+
+% check_upper_year_core_req(["CPSC 310", "CPSC 313", "CPSC 320", "CPSC 304", "CPSC 312", "CPSC 340", "CPSC 404", "CPSC 410", "CPSC 416"], MT).
+check_upper_year_core_req(Transcript, ModifiedTranscript) :-
+    check_third_year_cpsc_req(Transcript, MT1),
+    check_upper_year_cpsc_req(MT1, ModifiedTranscript),
+    writeln("Upper Year Core Requirement is Satisfied.").
+
+% check_third_year_cpsc_req(["CPSC 310", "CPSC 313", "CPSC 320"], MT).
+check_third_year_cpsc_req(Transcript, ModifiedTranscript) :-
+    findall(X, (member(X, Transcript), third_year_cpsc(X)), L1),
+    length(L1, Length1),
+    Length1 > 2,
+    remove_courses(Transcript, L1, ModifiedTranscript, 3).
+
+third_year_cpsc("CPSC 310").
+third_year_cpsc("CPSC 313").
+third_year_cpsc("CPSC 320").
+
+% check_upper_year_cpsc_req(["CPSC 304", "CPSC 312", "CPSC 340", "CPSC 404", "CPSC 410", "CPSC 416"], MT).
+check_upper_year_cpsc_req(Transcript, ModifiedTranscript) :-
+    upper_year_cpsc_helper(Transcript, FourthYearCpscCreditList, FourthYearCpscCourses, 399),
+    credit_sum(FourthYearCpscCreditList, Sum),
+    Sum > 8,
+    remove_courses(Transcript, FourthYearCpscCourses, MT1, 3),
+    upper_year_cpsc_helper(MT1, ThirdYearCpscCreditList, ThirdYearCpscCourses, 299),
+    credit_sum(ThirdYearCpscCreditList, Sum),
+    Sum > 8,
+    remove_courses(MT1, ThirdYearCpscCourses, ModifiedTranscript, 3).
+
+% returns list of credits and list of cpsc courses with num > CourseNum
+% upper_year_cpsc_helper(["CPSC 304", "CPSC 312", "CPSC 340", "CPSC 404", "CPSC 410", "CPSC 416"], L1, L2, 399).
+upper_year_cpsc_helper([],[],[],_).
+upper_year_cpsc_helper([H|T], [Credit|T2], [H|L2], CourseNum) :-
+    get_course_info(H, SC, SN),
+    SC = "CPSC",
+    atom_number(SN, Num),
+    Num > CourseNum,
+    credit(SC, SN, Credit),
+    upper_year_cpsc_helper(T, T2, L2, CourseNum).
+upper_year_cpsc_helper([H|T], L1, L2, CourseNum) :-
+    upper_year_cpsc_helper(T, L1, L2, CourseNum).
+
+
+% check_arts_req(["MATH 100","CHEM 121","CLST 301", "GERM 433", "LATN 101", "PHIL 120"], MT).
+check_arts_req(Transcript, ModifiedTranscript) :-
+    arts_helper(Transcript, ArtsCreditList, ArtsCourses),
+    credit_sum(ArtsCreditList, Sum),
+    Sum > 11,
+    remove_courses(Transcript, ArtsCourses, ModifiedTranscript, 4),
+    writeln("Arts Requirement is Satisfied.").
+
+% returns list of credits and list of art courses
+arts_helper([],[],[]).
+arts_helper([H|T], [Credit|T2], [H|L2]) :-
+    get_course_info(H, SC, SN),
+    atom_string(SCA, SC),
+    faculty(SCA, 'Faculty of Arts'),
+    credit(SC, SN, Credit),
+    arts_helper(T, T2, L2).
+arts_helper([H|T], L1, L2) :-
+    arts_helper(T, L1, L2).
+
 
 % check_breadth_req(["MATH 100","CHEM 121","PHYS 101","BIOL 121","STAT 200","ASTR 101"], MT).
 check_breadth_req(TR, MT):-
@@ -186,8 +393,10 @@ invalid_breadth_courses("EOSC 111").
 invalid_breadth_courses("GEOB 207").
 
 
-% check_upper_level_req(["BIOL 323", "BIOL 324", "BIOL 325", "ECON 301", "ECON 302", "ECON 303", "ECON 304", "ECON 305", 
-% "ECON 306", "BIOL 325", "CPSC 310", "CPSC 313", "CPSC 320", "CPSC 312", "CPSC 311", "CPSC 314"]).
+/* 
+check_upper_level_req(["BIOL 323", "BIOL 324", "BIOL 325", "ECON 301", "ECON 302", "ECON 303", "ECON 304", "ECON 305", 
+"ECON 306", "BIOL 325", "CPSC 310", "CPSC 313", "CPSC 320", "CPSC 312", "CPSC 311", "CPSC 314"]).
+*/
 % should be just enough upper level science and non-science credits
 check_upper_level_req(Transcript) :-
     upper_level_helper(Transcript, UpperLevelCreditList, UpperLevelScienceCreditList),
