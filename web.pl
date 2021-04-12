@@ -32,6 +32,10 @@ faculty(SubjectCode, Faculty) :-
 % credit("CPSC", "110", Credit)
 % Credit = 4
 credit(SubjectCode, SubjectNum, Credit) :-
+    credit_helper(SubjectCode, SubjectNum, Credit) -> Credit = Credit ; Credit = 0.
+    
+
+credit_helper(SubjectCode, SubjectNum, Credit) :- 
     atom_concat("https://courses.students.ubc.ca/cs/courseschedule?tname=subj-course&course=", SubjectNum, TEMP1),
     atom_concat("&sessyr=2020&sesscd=W&dept=", SubjectCode, TEMP2),
     atom_concat(TEMP2, "&pname=subjarea", TEMP3),
@@ -43,4 +47,4 @@ credit(SubjectCode, SubjectNum, Credit) :-
     split_string(CreditElem, " ", "" , Tokens),
     nth0(1, Tokens, CreditStr), % get the element at index 1
     atom_number(CreditStr, Credit). % convert str to num
-    
+
