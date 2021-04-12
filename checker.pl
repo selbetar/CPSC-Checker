@@ -90,9 +90,7 @@ check_core_req(Transcript, ModifiedTranscript) :-
 % check_first_year_core_req(["CPSC 110", "CPSC 121", "MATH 100", "MATH 101", "CHEM 121", "PHYS 101", "BIOL 121"], MT).
 check_first_year_core_req(Transcript, ModifiedTranscript) :-
     check_first_year_cpsc_req(Transcript, MT1),
-    check_first_year_math_req(MT1, MT2),
-    check_phys_science_req(MT2, MT3),
-    check_biol_req(MT3, ModifiedTranscript),
+    check_first_year_math_req(MT1, MT2).
     writeln("First Year Core Requirement is Satisfied.").
 
 
