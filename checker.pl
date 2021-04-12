@@ -4,14 +4,12 @@ check_credit_count(Transcript) :-
     credit_count_helper(Transcript, CreditList),
     credit_sum(CreditList, Sum),
     Sum > 119,
-    writeln("Credit Requirement is Satisfied."),
+    write("Credit Requirement is Satisfied.\n").
 
 credit_count_helper([],[]).
 credit_count_helper([H|T],[C|L]) :-
-    split_string(H, " ", "" , Tokens),
-    nth0(0, Tokens, SubjectCode),
-    nth0(1, Tokens, SubjectNum),
-    credit(SubjectCode,SubjectNum, C),
+    get_course_info(H, SC, SN),
+    credit(SC,SN, C),
     credit_count_helper(T, L).
 
 credit_sum([],0).
@@ -90,8 +88,8 @@ check_core_req(Transcript, ModifiedTranscript) :-
 % check_first_year_core_req(["CPSC 110", "CPSC 121", "MATH 100", "MATH 101", "CHEM 121", "PHYS 101", "BIOL 121"], MT).
 check_first_year_core_req(Transcript, ModifiedTranscript) :-
     check_first_year_cpsc_req(Transcript, MT1),
-    check_first_year_math_req(MT1, MT2).
-    writeln("First Year Core Requirement is Satisfied.").
+    check_first_year_math_req(MT1, ModifiedTranscript),
+    write("First Year Core Requirement is Satisfied.\n").
 
 
 % check_first_year_cpsc_req(["CPSC 110", "CPSC 121", "CPSC 210"], MT).
@@ -118,7 +116,7 @@ check_first_year_math_req(Transcript, ModifiedTranscript) :-
 
 % returns a list containing one item from the first list and one item from the second list
 first_year_math_helper([],[],_).
-first_year_math_helper([H1|T1], [H2|T2], L) :-
+first_year_math_helper([H1|_], [H2|_], L) :-
     L = [H1,H2].
 
 first_year_math1("MATH 100").
@@ -178,7 +176,7 @@ get_biol_courses(Transcript, L) :-
 
 % returns true for eligible biology courses (ASTR, ATSC, BIOL, EOSC, GEOB)
 biol_course(Course) :-
-    get_course_info(Course, SC, SN),
+    get_course_info(Course, SC, _),
     member(SC, ["ASTR", "ATSC", "BIOL", "EOSC", "GEOB"]).
 
 
@@ -187,7 +185,7 @@ check_second_year_core_req(Transcript, ModifiedTranscript) :-
     check_second_year_cpsc_req(Transcript, MT1),
     check_second_year_math_req(MT1, MT2),
     check_second_year_stat_req(MT2, ModifiedTranscript),
-    writeln("Second Year Core Requirement is Satisfied.").
+    write("Second Year Core Requirement is Satisfied.\n").
 
 
 % check_second_year_cpsc_req(["CPSC 210", "CPSC 213", "CPSC 221", "CPSC 310"], MT).
@@ -235,7 +233,7 @@ check_second_year_stat_req(Transcript, ModifiedTranscript) :-
 check_upper_year_core_req(Transcript, ModifiedTranscript) :-
     check_third_year_cpsc_req(Transcript, MT1),
     check_upper_year_cpsc_req(MT1, ModifiedTranscript),
-    writeln("Upper Year Core Requirement is Satisfied.").
+    write("Upper Year Core Requirement is Satisfied.\n").
 
 % check_third_year_cpsc_req(["CPSC 310", "CPSC 313", "CPSC 320"], MT).
 check_third_year_cpsc_req(Transcript, ModifiedTranscript) :-
@@ -269,7 +267,7 @@ upper_year_cpsc_helper([H|T], [Credit|T2], [H|L2], CourseNum) :-
     Num > CourseNum,
     credit(SC, SN, Credit),
     upper_year_cpsc_helper(T, T2, L2, CourseNum).
-upper_year_cpsc_helper([H|T], L1, L2, CourseNum) :-
+upper_year_cpsc_helper([_|T], L1, L2, CourseNum) :-
     upper_year_cpsc_helper(T, L1, L2, CourseNum).
 
 
@@ -279,7 +277,7 @@ check_arts_req(Transcript, ModifiedTranscript) :-
     credit_sum(ArtsCreditList, Sum),
     Sum > 11,
     remove_courses(Transcript, ArtsCourses, ModifiedTranscript, 4),
-    writeln("Arts Requirement is Satisfied.").
+    write("Arts Requirement is Satisfied.\n").
 
 % returns list of credits and list of art courses
 arts_helper([],[],[]).
@@ -289,7 +287,7 @@ arts_helper([H|T], [Credit|T2], [H|L2]) :-
     faculty(SCA, 'Faculty of Arts'),
     credit(SC, SN, Credit),
     arts_helper(T, T2, L2).
-arts_helper([H|T], L1, L2) :-
+arts_helper([_|T], L1, L2) :-
     arts_helper(T, L1, L2).
 
 
@@ -308,7 +306,7 @@ check_breadth_req(TR, MT):-
     ->  MT = MT4
     ;   MT = TR 
     ),
-    writeln("Breadth Requirement is Satisfied.").
+    write("Breadth Requirement is Satisfied.\n").
     
 
 check_breadth_LFSC(TR, MT, N) :-
@@ -397,13 +395,20 @@ check_upper_level_req(["BIOL 323", "BIOL 324", "BIOL 325", "ECON 301", "ECON 302
 */
 % should be just enough upper level science and non-science credits
 check_upper_level_req(Transcript) :-
-    upper_level_helper(Transcript, UpperLevelCreditList, UpperLevelScienceCreditList),
+    get_upper_level_courses(Transcript, UpperCourses),
+    upper_level_helper(UpperCourses, UpperLevelCreditList, UpperLevelScienceCreditList),
     credit_sum(UpperLevelCreditList, Sum1),
     credit_sum(UpperLevelScienceCreditList, Sum2),
     Sum1 > 47,
     Sum2 > 29,
-    writeln("Upper-Level Requirement is Satisfied.").
+    write("Upper-Level Requirement is Satisfied.\n").
 
+
+get_upper_level_courses(Transcript, Upper) :-
+    findall(
+        X,
+        (member(X,Transcript), get_course_info(X, _, SN), atom_number(SN, Num), Num > 299),
+        Upper).
 
 upper_level_helper([], [], []).
 upper_level_helper([H|T], [Credit|T2], UpperLevelScienceCreditList) :-
